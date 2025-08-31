@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kankara - Double Pendulum NEAT Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #app {
+            display: flex;
+            height: 100vh;
+        }
+        
+        #simulation-canvas {
+            background: #000;
+            border: 1px solid #333;
+        }
+        
+        #controls {
+            width: 300px;
+            background: #2a2a2a;
+            padding: 20px;
+            border-left: 1px solid #333;
+            overflow-y: auto;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .control-group input, .control-group button {
+            width: 100%;
+            padding: 8px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        
+        .control-group button {
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .control-group button:hover {
+            background: #444;
+        }
+        
+        #stats {
+            font-size: 11px;
+            color: #999;
+            margin-top: 20px;
+        }
+        
+        .stats-line {
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <canvas id="simulation-canvas" width="800" height="600"></canvas>
+        <div id="controls">
+            <h3>Kankara Simulation</h3>
+            
+            <div class="control-group">
+                <label>Generation</label>
+                <span id="generation">0</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Best Fitness</label>
+                <span id="best-fitness">0.00</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Population Size</label>
+                <input type="number" id="population-size" value="50" min="10" max="500">
+            </div>
+            
+            <div class="control-group">
+                <label>Simulation Speed</label>
+                <input type="range" id="sim-speed" min="0.1" max="5" step="0.1" value="1">
+                <span id="speed-value">1.0x</span>
+            </div>
+            
+            <div class="control-group">
+                <button id="start-evolution">Start Evolution</button>
+                <button id="pause-evolution">Pause</button>
+                <button id="reset-simulation">Reset</button>
+            </div>
+            
+            <div class="control-group">
+                <label>View Mode</label>
+                <select id="view-mode">
+                    <option value="best">Best Individual</option>
+                    <option value="population">Population</option>
+                    <option value="comparison">Side by Side</option>
+                </select>
+            </div>
+            
+            <div id="stats">
+                <div class="stats-line">FPS: <span id="fps">0</span></div>
+                <div class="stats-line">Workers: <span id="workers">0</span></div>
+                <div class="stats-line">Avg Fitness: <span id="avg-fitness">0.00</span></div>
+                <div class="stats-line">Species: <span id="species-count">0</span></div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/simple-demo.ts"></script>
+</body>
+</html>

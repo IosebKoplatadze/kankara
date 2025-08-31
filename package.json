@@ -1,0 +1,21 @@
+{
+  "name": "kankara",
+  "version": "1.0.0",
+  "description": "Sophisticated double pendulum simulation with NEAT algorithm training",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "serve": "vite preview"
+  },
+  "keywords": ["physics", "simulation", "pendulum", "NEAT", "neural-networks", "AI"],
+  "author": "Ioseb Koplatadze",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3"
+  }
+}
