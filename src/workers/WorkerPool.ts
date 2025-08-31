@@ -2,7 +2,13 @@ import { Individual } from '../neat/NEATEvolution';
 
 export interface WorkerTask {
     id: string;
-    individual: Individual;
+    individual: {
+        id: number;
+        network: any; // Serialized network data
+        fitness: number;
+        species: number;
+        age: number;
+    };
     simulationTime: number;
 }
 
@@ -53,7 +59,10 @@ export class WorkerPool {
         for (const individual of individuals) {
             const task: WorkerTask = {
                 id: `task_${individual.id}_${Date.now()}`,
-                individual,
+                individual: {
+                    ...individual,
+                    network: individual.network.export() // Serialize the network
+                } as any,
                 simulationTime
             };
 

@@ -1,6 +1,23 @@
 import { DoublePendulum, DoublePendulumState } from '../physics/DoublePendulum';
 import { NeuralNetwork } from '../neat/NeuralNetwork';
-import { WorkerTask, WorkerResult } from './WorkerPool';
+
+export interface WorkerTask {
+    id: string;
+    individual: {
+        id: number;
+        network: any; // Serialized network data
+        fitness: number;
+        species: number;
+        age: number;
+    };
+    simulationTime: number;
+}
+
+export interface WorkerResult {
+    taskId: string;
+    fitness: number;
+    simulationData?: any;
+}
 
 // Worker script for parallel simulation evaluation
 self.onmessage = (event: MessageEvent) => {
@@ -30,7 +47,7 @@ function evaluateIndividual(task: WorkerTask): WorkerResult {
     
     // Recreate neural network from exported data
     const network = new NeuralNetwork(8, 2); // 8 inputs, 2 outputs
-    network.import(individual.network.export());
+    network.import(individual.network); // individual.network is serialized data
     
     // Create pendulum with slight randomization
     const pendulum = new DoublePendulum({

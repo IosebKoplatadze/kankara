@@ -46,7 +46,10 @@ export class NEATEvolution {
     private nextIndividualId: number = 0;
     private nextSpeciesId: number = 0;
     private fitnessHistory: number[][] = [[], [], []]; // [best, average, worst]
-    private simulationTime: number = 5000; // 5 seconds per evaluation
+    private simulationTime: number = 1000; // 1 second per evaluation
+    private evaluationInProgress: boolean = false;
+    private generationTimer: number = 0;
+    private generationInterval: number = 3000; // 3 seconds between generations
 
     constructor(populationSize: number = 50) {
         this.config = {
@@ -88,23 +91,35 @@ export class NEATEvolution {
         this.speciate();
     }
 
-    public async update(deltaTime: number): Promise<void> {
-        // Evaluate population fitness in parallel using worker pool
-        await this.evaluatePopulation();
-        
-        // Check if generation is complete
-        if (this.isGenerationComplete()) {
-            this.evolveToNextGeneration();
+    public async update(deltaTime: number, workerPool?: any): Promise<void> {
+        if (this.evaluationInProgress) return;
+
+        this.generationTimer += deltaTime;
+
+        // Only start new generation if enough time has passed
+        if (this.generationTimer >= this.generationInterval || !this.isGenerationComplete()) {
+            if (!this.isGenerationComplete()) {
+                this.evaluationInProgress = true;
+                await this.evaluatePopulation(workerPool);
+                this.evaluationInProgress = false;
+            }
+            
+            if (this.isGenerationComplete()) {
+                this.evolveToNextGeneration();
+                this.generationTimer = 0;
+            }
         }
     }
 
-    private async evaluatePopulation(): Promise<void> {
-        // This would use the worker pool for parallel evaluation
-        // For now, we'll simulate the evaluation locally
-        for (const individual of this.population) {
-            if (individual.fitness === 0) { // Not yet evaluated
-                individual.fitness = await this.evaluateIndividual(individual);
-            }
+    private async evaluatePopulation(workerPool?: any): Promise<void> {
+        const unevaluatedIndividuals = this.population.filter(ind => ind.fitness === 0);
+        
+        if (unevaluatedIndividuals.length === 0) return;
+
+        // For now, use sequential evaluation to ensure it works
+        // TODO: Enable worker pool evaluation after fixing serialization
+        for (const individual of unevaluatedIndividuals) {
+            individual.fitness = await this.evaluateIndividual(individual);
         }
     }
 
@@ -130,23 +145,37 @@ export class NEATEvolution {
             // Get control outputs from neural network
             const outputs = individual.network.feedForward(inputs);
             
-            // Apply control forces
-            pendulum.applyControl(outputs[0], outputs[1]);
+            // Apply control forces (bounded)
+            const force1 = Math.tanh(outputs[0] || 0) * 0.1;
+            const force2 = Math.tanh(outputs[1] || 0) * 0.1;
+            pendulum.applyControl(force1, force2);
             
             // Update physics
             pendulum.update(dt);
             
-            // Accumulate fitness
-            totalFitness += pendulum.calculateFitness();
+            // Calculate and accumulate fitness
+            const stepFitness = pendulum.calculateFitness();
+            totalFitness += stepFitness;
             
-            // Early termination if pendulum falls completely
+            // Early termination if pendulum falls too low
             const pos = pendulum.getCartesianPositions();
-            if (pos.y1 < -2.5 || pos.y2 < -2.5) {
+            if (pos.y1 < -2.5 && pos.y2 < -2.5) {
+                // Apply penalty for early termination
+                totalFitness *= (step / steps);
                 break;
             }
         }
 
-        return totalFitness / steps;
+        // Return average fitness over the simulation
+        const avgFitness = totalFitness / steps;
+        const finalFitness = Math.max(0.01, avgFitness); // Ensure minimum positive fitness
+        
+        // Debug logging for first few evaluations
+        if (individual.id < 3) {
+            console.log(`Individual ${individual.id} fitness: ${finalFitness.toFixed(4)} (total: ${totalFitness.toFixed(2)}, steps: ${steps})`);
+        }
+        
+        return finalFitness;
     }
 
     private isGenerationComplete(): boolean {
@@ -494,6 +523,8 @@ export class NEATEvolution {
         this.fitnessHistory = [[], [], []];
         this.nextIndividualId = 0;
         this.nextSpeciesId = 0;
+        this.evaluationInProgress = false;
+        this.generationTimer = 0;
         this.initializePopulation();
     }
 

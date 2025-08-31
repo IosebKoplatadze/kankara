@@ -276,6 +276,8 @@ export class DoublePendulum {
         // Time bonus - reward for lasting longer
         const timeFitness = Math.min(this.time / 10, 1); // Max bonus at 10 seconds
         
-        return (heightFitness * 0.5 + stabilityFitness * 0.3 + timeFitness * 0.2) * 100;
+        const fitness = (heightFitness * 0.5 + stabilityFitness * 0.3 + timeFitness * 0.2) * 100;
+        
+        return fitness;
     }
 }

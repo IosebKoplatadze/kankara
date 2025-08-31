@@ -23,6 +23,17 @@ class KankaraApp {
         
         this.setupEventListeners();
         this.updateUI();
+        
+        // Start rendering loop even when not evolving
+        this.startRenderLoop();
+    }
+
+    private startRenderLoop(): void {
+        const renderLoop = () => {
+            this.render();
+            requestAnimationFrame(renderLoop);
+        };
+        requestAnimationFrame(renderLoop);
     }
 
     private setupEventListeners(): void {
@@ -89,7 +100,7 @@ class KankaraApp {
         }
 
         // Update evolution
-        this.evolution.update(deltaTime);
+        this.evolution.update(deltaTime, this.workerPool);
 
         // Render current state
         this.render();
@@ -122,6 +133,11 @@ class KankaraApp {
         const best = this.evolution.getBestIndividual();
         if (best && best.pendulum) {
             this.renderer.drawPendulum(best.pendulum, { alpha: 1.0, color: '#00ff00' });
+        } else {
+            // If no best individual yet, show a default pendulum
+            const defaultPendulum = new DoublePendulum();
+            defaultPendulum.update(0.016); // One frame update
+            this.renderer.drawPendulum(defaultPendulum, { alpha: 0.5, color: '#666666' });
         }
     }
 
